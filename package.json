@@ -1,0 +1,29 @@
+{
+  "name": "vor2ex-backend",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "watch": "ts-node --watch src/index.ts",
+    "update-types": "npx supabase gen types typescript --project-id 'ehsqllzqftwwnjixpyos' --schema public > src/types/database.types.ts",
+    "generate-index": "npx tsx scripts/generate-index.ts"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.9.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.76.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "supabase": "^2.53.6"
+  }
+}
