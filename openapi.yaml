@@ -1,0 +1,312 @@
+openapi: 3.0.3
+info:
+  title: Vor2ex Backend API
+  description: Proxy for Amazon SP-API used by Vor2ex frontend.
+  version: 0.1.0
+  contact:
+    name: Jaime Alonso
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://your-backend-domain.com
+    description: Production (to be configured)
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/amazon/products:
+    get:
+      summary: Search Amazon products
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keywords
+          in: query
+          required: true
+          schema:
+            type: string
+            example: laptop
+        - name: endpoint
+          in: query
+          required: true
+          description: SP-API base URL (note: SSRF risk, see audit)
+          schema:
+            type: string
+            example: https://sellingpartnerapi-na.amazon.com
+        - name: marketplace
+          in: query
+          required: true
+          description: Amazon marketplace ID
+          schema:
+            type: string
+            example: ATVPDKIKX0DER
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Missing parameters
+        '500':
+          description: Backend error
+
+  /api/amazon/products/next:
+    get:
+      summary: Get next page of product search
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: pageToken
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: keywords
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: endpoint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: marketplace
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Missing parameters
+        '500':
+          description: Backend error
+
+  /api/amazon/products/previous:
+    get:
+      summary: Get previous page of product search
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: pageToken
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: keywords
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: endpoint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: marketplace
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Missing parameters
+        '500':
+          description: Backend error
+
+  /api/amazon/product/{asin}:
+    get:
+      summary: Get product details by ASIN
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: asin
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: endpoint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: marketplace
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Missing parameters
+        '500':
+          description: Backend error
+
+  /api/amazon/product/{asin}/offers:
+    get:
+      summary: Get product offers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: asin
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: endpoint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: marketplace
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Missing parameters
+        '500':
+          description: Backend error
+
+  /api/amazon/product/{asin}/fees:
+    get:
+      summary: Get fee estimate for a product
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: asin
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: price
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: marketplace
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: endpoint
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Missing parameters
+        '500':
+          description: Backend error
+
+  /api/amazon/auth/validate:
+    post:
+      summary: Validate Amazon credentials for the current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful validation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Credential'
+        '500':
+          description: Validation failed
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          additionalProperties: true
+        error:
+          type: string
+
+    Credential:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        amz_access_token:
+          type: string
+        amz_refresh_token:
+          type: string
+        amz_expires_at:
+          type: string
+          format: date-time
+        amz_marketplace:
+          type: string
+      required:
+        - id
+        - user_id
+        - amz_access_token
+        - amz_refresh_token
+        - amz_expires_at
+        - amz_marketplace
