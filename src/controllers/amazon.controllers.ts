@@ -11,22 +11,28 @@ export class AmazonController {
 
     getProducts = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         try {
-            const { keywords, endpoint, marketplace } = req.query;
+            const { keywords, marketplace, minPrice, maxPrice, minReviews, minRating, minSalesRank } = req.query;
             const userId = req.userId!;
 
-            if (!keywords || !endpoint || !marketplace) {
+            if (!keywords || !marketplace) {
                 res.status(400).json({
                     success: false,
-                    error: 'Keywords, endpoint, and marketplace are required'
+                    error: 'Keywords and marketplace are required'
                 });
                 return;
             }
 
             const result = await this.amazonService.fetchCatalogItems(
                 keywords as string,
-                endpoint as string,
                 marketplace as string,
-                userId
+                userId,
+                {
+                    minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+                    maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+                    minReviews: minReviews ? parseInt(minReviews as string) : undefined,
+                    minRating: minRating ? parseFloat(minRating as string) : undefined,
+                    minSalesRank: minSalesRank ? parseInt(minSalesRank as string) : undefined
+                }
             );
 
             if (result.success) {
@@ -45,20 +51,19 @@ export class AmazonController {
     getProduct = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         try {
             const { asin } = req.params;
-            const { endpoint, marketplace } = req.query;
+            const { marketplace } = req.query;
             const userId = req.userId!;
 
-            if (!asin || !endpoint || !marketplace) {
+            if (!asin || !marketplace) {
                 res.status(400).json({
                     success: false,
-                    error: 'ASIN, endpoint, and marketplace are required'
+                    error: 'ASIN and marketplace are required'
                 });
                 return;
             }
 
             const result = await this.amazonService.fetchCatalogItem(
                 asin,
-                endpoint as string,
                 marketplace as string,
                 userId
             );
@@ -79,20 +84,19 @@ export class AmazonController {
     getProductOffers = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         try {
             const { asin } = req.params;
-            const { endpoint, marketplace } = req.query;
+            const { marketplace } = req.query;
             const userId = req.userId!;
 
-            if (!asin || !endpoint || !marketplace) {
+            if (!asin || !marketplace) {
                 res.status(400).json({
                     success: false,
-                    error: 'ASIN, endpoint, and marketplace are required'
+                    error: 'ASIN and marketplace are required'
                 });
                 return;
             }
 
             const result = await this.amazonService.getItemOffers(
                 asin,
-                endpoint as string,
                 marketplace as string,
                 userId
             );
@@ -146,13 +150,13 @@ export class AmazonController {
 
     getNextPage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         try {
-            const { pageToken, keywords, endpoint, marketplace } = req.query;
+            const { pageToken, keywords, marketplace } = req.query;
             const userId = req.userId!;
 
-            if (!pageToken || !keywords || !endpoint || !marketplace) {
+            if (!pageToken || !keywords || !marketplace) {
                 res.status(400).json({
                     success: false,
-                    error: 'PageToken, keywords, endpoint, and marketplace are required'
+                    error: 'PageToken, keywords, and marketplace are required'
                 });
                 return;
             }
@@ -160,7 +164,6 @@ export class AmazonController {
             const result = await this.amazonService.fetchNextAmazonCatalogPage(
                 pageToken as string,
                 keywords as string,
-                endpoint as string,
                 marketplace as string,
                 userId
             );
@@ -180,13 +183,13 @@ export class AmazonController {
 
     getPreviousPage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         try {
-            const { pageToken, keywords, endpoint, marketplace } = req.query;
+            const { pageToken, keywords, marketplace } = req.query;
             const userId = req.userId!;
 
-            if (!pageToken || !keywords || !endpoint || !marketplace) {
+            if (!pageToken || !keywords || !marketplace) {
                 res.status(400).json({
                     success: false,
-                    error: 'PageToken, keywords, endpoint, and marketplace are required'
+                    error: 'PageToken, keywords, and marketplace are required'
                 });
                 return;
             }
@@ -194,7 +197,6 @@ export class AmazonController {
             const result = await this.amazonService.fetchPreviousAmazonCatalogPage(
                 pageToken as string,
                 keywords as string,
-                endpoint as string,
                 marketplace as string,
                 userId
             );
@@ -219,13 +221,12 @@ export class AmazonController {
             const result = await this.amazonService.validateAndGetCredentials(userId);
 
             res.json({
-                success: true,
-                data: result
+                valid: true
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                error: error instanceof Error ? error.message : 'Failed to refresh token'
+                error: error instanceof Error ? error.message : 'Failed to validate credentials'
             });
         }
     };

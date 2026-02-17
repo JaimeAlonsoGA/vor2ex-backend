@@ -4,6 +4,17 @@ export const AMAZON_ENDPOINTS = {
     "us-west-2": "https://sellingpartnerapi-fe.amazon.com",
 };
 
+export function getEndpointForMarketplace(marketplaceId: string): string {
+    for (const [region, marketplaces] of Object.entries(AMAZON_MARKETPLACES)) {
+        for (const [country, id] of Object.entries(marketplaces)) {
+            if (id === marketplaceId) {
+                return AMAZON_ENDPOINTS[region as keyof typeof AMAZON_ENDPOINTS];
+            }
+        }
+    }
+    throw new Error(`Unknown marketplace ID: ${marketplaceId}`);
+}
+
 export const AMAZON_DOMAINS = {
     "North America": {
         "Canada": "ca",
